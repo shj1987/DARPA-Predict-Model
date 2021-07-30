@@ -14,4 +14,10 @@ Prediction models for CP5
         * `test_num`: how many days as the test dates
         * `corrmat_file`: name of the correlation matrix file
         * `main_file`: time series of the chosen platform
+   * Decision_tree model (DT_Model folder)
+        * `src`: contains the decision tree model structure.
+        * `models`: the linear_models for predicion use in decision tree model.
+        * `data_proc.py`: preprocessing for the input file. Different processing for different input files are named respectively in the file.
+        * `run_MODEL.py`: model training and inferencing file. MODEL variable can be `[original, lasso, lasso_2]` which correspond to the model `[Linear_Regression, LASSO, LASSO_2]` models.
+        * `Output_format`: each model outputs three files, top5, top10 and avg, taking the topk and average value of the prediction values.
 7. Realize the predicted number to event list using `network_fill.ipynb`
