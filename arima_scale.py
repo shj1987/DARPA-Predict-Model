@@ -7,13 +7,13 @@ from collections import defaultdict
 from datetime import timedelta
 from math import floor
 
-def read_main_data(platform):
+def read_main_data(main_data):
     """Get main data
 
-    :param platform: Twitter or Youtube
+    :param main_data: name of data file
     :return: Dict contain main platform data indexed by narrative
     """
-    with open(os.path.join(os.getcwd(), platform + '_time_series_to_8_03.json'), 'r') as f:
+    with open(os.path.join(os.getcwd(), main_data), 'r') as f:
         d = json.loads(f.read())
     dd = {k: pd.read_json(v, orient='columns') for k, v in d.items()}
     return dd
@@ -224,10 +224,11 @@ def autoRegressive(platform, top_num, train_num, p, p1, narratives, corrmat_file
 # prediction
 prevs = [0] # prev dates
 platform = 'twitter'
-after_shift_gdelt = 1 if platform == 'twitter' else 0
+after_shift_gdelt = 1 if platform == 'twitter' else 0 # shift window to match the time lag between different data 
 top_num = 15  # top 15 gdelt
 test_num = 14   
 corrmat_file = 'news_gdelt_leidos_bert_corr_to_8_03.json'
+main_file = 'twitter_time_series_to_8_03.json'
 
 # get main data and training narrative names
 main_data = read_main_data(platform)
@@ -254,7 +255,6 @@ columns_name = main_data['benefits/covid'].columns.values
 for p in prevs:
     print('Processing: ' + str(p))
     rst_dict = {}  # result dict indexed by narrative name
-    print("Current narratives: " + str(narratives))
     train_rst = autoRegressive(platform, top_num, train_num, p, 1, narratives, corrmat_file, after_shift_gdelt)
     coef = train_rst[0] # coefficients
     scale = train_rst[1]
