@@ -30,7 +30,7 @@ def extractNewsSrcTimeseries(path, granularity, start_date, end_date, threshold,
     logging.info('Counting')
     news_counts = {
         k: df[df['press'] == k].resample(granularity, on='date_added').press.count().reindex(
-            pd.date_range(pd.to_datetime(start_date), pd.to_datetime(end_date)), fill_value=0) \
+            pd.date_range(pd.to_datetime(start_date), pd.to_datetime(end_date) - pd.Timedelta(days=1)), fill_value=0) \
         for k in df.press.unique()
     }
     result_df = pd.DataFrame(news_counts)
@@ -54,7 +54,7 @@ if __name__ == '__main__':
     parser.add_argument('-i', '--gdeltpath', required=True, type=str, help='Path to the GDELT file (.json or .json.gz)')
     parser.add_argument('-g', '--granularity', default='D', type=str, choices=['D', 'W'], help='Activity counting granularity (D or W)')
     parser.add_argument('-s', '--startdate', required=True, type=dateutil.parser.isoparse, help='The Start Date (format YYYY-MM-DD)')
-    parser.add_argument('-e', '--enddate', required=True, type=dateutil.parser.isoparse, help='The End Date (format YYYY-MM-DD (Inclusive))')
+    parser.add_argument('-e', '--enddate', required=True, type=dateutil.parser.isoparse, help='The End Date (format YYYY-MM-DD (Exclusive))')
     parser.add_argument('-t', '--threshold', required=True, type=int, help='The threshold to filter out those media sources without the enough posts')
     parser.add_argument('-o', '--out', required=True, type=str, help='Path to save the extract timeseries (.json)')
     args = parser.parse_args()

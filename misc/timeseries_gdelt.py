@@ -31,11 +31,11 @@ def extractGdeltTimeseries(path, granularity, start_date, end_date, out_path):
 
     logging.info('Counting')
     eventCountTimeseries = {}
-    idxs = pd.date_range(pd.to_datetime(start_date), pd.to_datetime(end_date))
+    idxs = pd.date_range(pd.to_datetime(start_date), pd.to_datetime(end_date) - pd.Timedelta(days=1))
     for code in tqdm(alleventcodes, total=len(alleventcodes)):
         tmp = df.query('EventCode == "{}"'.format(code))
         counts = tmp.day.value_counts().resample(granularity).sum()
-        counts = counts[pd.to_datetime(start_date):(pd.to_datetime(end_date) + pd.Timedelta(days=1))].reindex(idxs, fill_value=0)
+        counts = counts[pd.to_datetime(start_date):(pd.to_datetime(end_date))].reindex(idxs, fill_value=0)
         eventCountTimeseries[code] = counts
 
     eventCountTimeseries_json = {k: v.to_json() for k, v in eventCountTimeseries.items()}
@@ -52,7 +52,7 @@ if __name__ == '__main__':
     parser.add_argument('-i', '--gdeltpath', required=True, type=str, help='Path to the GDELT file (.json or .json.gz)')
     parser.add_argument('-g', '--granularity', default='D', type=str, choices=['D', 'W'], help='Activity counting granularity (D or W)')
     parser.add_argument('-s', '--startdate', required=True, type=dateutil.parser.isoparse, help='The Start Date (format YYYY-MM-DD)')
-    parser.add_argument('-e', '--enddate', required=True, type=dateutil.parser.isoparse, help='The End Date (format YYYY-MM-DD (Inclusive))')
+    parser.add_argument('-e', '--enddate', required=True, type=dateutil.parser.isoparse, help='The End Date (format YYYY-MM-DD (Exclusive))')
     parser.add_argument('-o', '--out', required=True, type=str, help='Path to save the extract timeseries (.json)')
     args = parser.parse_args()
     for arg in vars(args):
