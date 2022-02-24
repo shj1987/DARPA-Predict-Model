@@ -7,20 +7,23 @@ CLEAN_OUTPUT='./data/cleaned_eval3_cp6.ea.newsarticles.youtube.2020-12-21_2021-0
 
 python clean_text_append.py $INPUT $CLEAN_OUTPUT $INPUT_GDELT
 
-# @Xiaotao: Add your UCPhrase Code
-# CLEAN_OUTPUT='/shared/data2/qiz3/socialsim/data/0830appended/cleaned_eval3_cp6.ea.newsarticles.youtube.2020-12-21_2021-01-10.json'
+# Step-1 Phrase mining
 UCPHRASE_INPUT='./ucphrase/testdata/ucphrase_input_cleaned_eval3_cp6.ea.newsarticles.youtube.2020-12-21_2021-01-10.json'
-UCPHRASE_OUTPUT_DIR='./ucphrase/decoded/eval3_cp6.ea.newsarticles.youtube.2020-12-21_2021-01-10'
+UCPHRASE_DECODE_DIR='./ucphrase/decoded/cleaned_eval3_cp6.ea.newsarticles.youtube.2020-12-21_2021-01-10'
+UCPHRASE_DECODE_PATH='./ucphrase/decoded/cleaned_eval3_cp6.ea.newsarticles.youtube.2020-12-21_2021-01-10/decoded/doc2sents-0.85-tokenized.id.ucphrase_input_cleaned_eval3_cp6.ea.newsarticles.youtube.2020-12-21_2021-01-10.json'
+UCPHRASE_OUTPUT_PATH='./ucphrase/ucphrase_cleaned_eval3_cp6.ea.newsarticles.youtube.2020-12-21_2021-01-10.json'
+
 python ucphrase_prepare_input.py -i ${CLEAN_OUTPUT} -o ${UCPHRASE_INPUT}
-python ucphrase/src/predict.py --gpu ${GPU} --path_corpus ${UCPHRASE_INPUT} --dir_output ${UCPHRASE_OUTPUT_DIR}
+python ucphrase/src/predict.py --gpu ${GPU} --path_corpus ${UCPHRASE_INPUT} --dir_output ${UCPHRASE_DECODE_DIR}
+python ucphrase/src/postprocess.py --path_cleaned_corpus ${CLEAN_OUTPUT} --path_ucphrase_decoded ${UCPHRASE_DECODE_PATH} --path_output ${UCPHRASE_OUTPUT_PATH}
 
 # Run WestClass
 python url2west_append.py
 
-# # @Xiaotao, Run Retrieval
+# # # @Xiaotao, Run Retrieval
 
-# # @Xiaotao, Run Roberta
+# # # @Xiaotao, Run Roberta
 
 
-# Run Merge
-python merge.py
+# # Run Merge
+# python merge.py
