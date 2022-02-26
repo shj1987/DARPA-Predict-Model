@@ -18,13 +18,13 @@ python ucphrase/src/predict.py --gpu ${GPU} --path_corpus ${UCPHRASE_INPUT} --di
 python ucphrase/src/postprocess.py --path_cleaned_corpus ${CLEAN_OUTPUT} --path_ucphrase_decoded ${UCPHRASE_DECODE_PATH} --path_output ${UCPHRASE_OUTPUT_PATH}
 
 # Run WestClass
-python url2west_append.py 
+INPUT_DIR='./ucphrase/'
+INPUT_PREFIX='ucphrase_cleaned'
+python url2west_append.py $INPUT_DIR $INPUT_PREFIX
 
 # Run Pre-trained Roberta
 ./classification_roberta.sh
 
 # Run Retrieval & Fine-tuned Roberta
-./classification_pipeline.sh
+./classification_retrieval.sh
 
-# # Run Merge
-# python merge.py

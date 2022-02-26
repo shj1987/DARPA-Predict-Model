@@ -1,27 +1,21 @@
 #!/usr/bin/env python
 # coding: utf-8
 
-# In[3]:
-
 # Collect all the news text
 input_files = []
 
 import os
-for root, dirs, files in os.walk('/shared/data2/qiz3/socialsim/data/0830appended/', topdown=False):
+import sys
+for root, dirs, files in os.walk(sys.argv[1], topdown=False):
     for name in files:
-        if name.startswith('ucphrase_eval_append'):
-            input_files.append('/shared/data2/qiz3/socialsim/data/0830appended/' + name)
+        if name.startswith(sys.argv[2]):
+            input_files.append(sys.argv[1] + name)
     
 print(input_files)
 
-
-# In[5]:
-
-
-
 url2results = dict()
 #narratives = ['benefits/connections/afghanistan', 'benefits/covid', 'benefits/development/energy', 'benefits/development/maritime', 'benefits/development/roads', 'benefits/jobs', 'controversies/china/border', 'controversies/china/debt', 'controversies/china/exploitation', 'controversies/china/funding', 'controversies/china/naval', 'controversies/china/uighur', 'controversies/pakistan/army', 'controversies/pakistan/bajwa', 'controversies/pakistan/baloch', 'controversies/pakistan/students', 'leadership/bajwa', 'leadership/khan', 'leadership/sharif', 'opposition/kashmir', 'opposition/propaganda']
-narratives = ['covid', 'covid/assistance', 'debt', 'environmentalism', 'infrastructure', 'mistreatment', 'prejudice', 'travel', 'un'] 
+#narratives = ['covid', 'covid/assistance', 'debt', 'environmentalism', 'infrastructure', 'mistreatment', 'prejudice', 'travel', 'un'] 
 selected_nar = []
 import json
 from collections import defaultdict
@@ -54,7 +48,7 @@ if True:
 
 # Clean up previous runs
 #get_ipython().system('rm -rf WeSTClass/results/*')
-#get_ipython().system('rm -f WeSTClass/news_manual/embedding')
+get_ipython().system('rm -f WeSTClass/news_manual/embedding')
 os.system('rm -f WeSTClass/news_manual/out.txt')
 
 
@@ -67,45 +61,10 @@ os.system('cd WeSTClass && python main.py --dataset news_manual --sup_source key
 # In[6]:
 
 url2west = dict()
-selected_nar = ['covid', 'assistance', 'debt', 'environmentalism', 'infrastructure', 'mistreatment', 'prejudice', 'travel', 'un'] 
-A = ['covid', 'assistance', 'debt', 'environmentalism', 'infrastructure', 'mistreatment', 'prejudice', '#', 'un']
-B = [['covid', 'coronavirus', 'covid19', 'pandemic', 'corona_virus', 'lockdowns'], ['assistance',
- 'chinese_assistance',
- 'china_assistance',
- 'financial_assistance',
- 'financial_support',
- 'resource_mobilization'],['debt', 'debts', 'chinese_loans', 'african_debt', 'repayments'],['environment',
- 'environmental',
- 'pollution',
- 'national_park',
- 'preservation',
- 'wildlife'],['infrastructure',
- 'road',
- 'roads',
- 'railways',
- 'ports',
- 'railway',
- 'public_infrastructure'],['mistreatment',
- 'maltreatment',
- 'abuse',
- 'abusement',
- 'ill_treatment',
- 'detention',
- 'detainee'],
-['prejudice',
- 'racial_prejudice',
- 'racism',
- 'racist',
- 'xenophobia',
- 'discrimination',
- 'religious_discrimination'], 
-['travel',
- 'flights',
- 'flight',
- 'international_travel',
- 'traveler',
- 'travelers',
- 'vacations'], ['un', 'united_nations', 'un_secretary', 'security_council']]
+with open('WeSTClass/news_manual/classes.txt') as IN:
+    for line in IN:
+        selected_nar.append(line.strip().split(':')[1])
+#selected_nar = ['covid', 'assistance', 'debt', 'environmentalism', 'infrastructure', 'mistreatment', 'prejudice', 'travel', 'un'] 
 topic2keywords_manual = {i : j for i, j in zip(A, B)}
 nar2key = {i:i for i in narratives}
 nar2keyweight = set()
@@ -126,8 +85,7 @@ close_all()
 fin1 = open_all()
 with open('WeSTClass11/news_manual/out.txt') as fin2:
     for u, line2 in zip(valid_url, fin2):
-        classes = ['covid', 'assistance', 'debt', 'environmentalism', 'infrastructure', 'mistreatment', 'prejudice', 'travel', 'un']
-        raw = {i : j for i, j in zip(classes, list(map(float, line2.strip().split(','))))}
+        raw = {i : j for i, j in zip(selected_nar, list(map(float, line2.strip().split(','))))}
         west = dict()
         for nar in selected_nar:
             if nar in nar2keyweight:
@@ -154,9 +112,6 @@ with open('WeSTClass11/news_manual/out.txt') as fin2:
         cnt += 1
     close_all()
 print(cnt)
-
-
-# In[7]:
 
 json.dump(url2west, open('./data/ft_retrieval_westclass_append.json', 'w'))
 # Only top 300 most confident results are kept for a frame
