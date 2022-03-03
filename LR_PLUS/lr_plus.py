@@ -248,7 +248,7 @@ def main(argv):
     opts, args = getopt.getopt(argv, 'hm:g:p:t:n:c:o:')
     for opt, arg in opts:
         if opt == '-h':
-            print('arima_scale.py -m <mainfile> -g <gdeltfile> -p <platform> -t <events top num> -n <test dates> -c <corrmatfile> -o <outputfile>')
+            print('lr_plus.py -m <mainfile> -g <gdeltfile> -p <platform> -t <events top num> -n <test dates> -c <corrmatfile> -o <outputfile>')
             sys.exit()
         elif opt == '-m':
             main_file = arg
