@@ -13,13 +13,15 @@ def extractNewsSrcTimeseries(path, granularity, start_date, end_date, threshold,
     logging.info('Reading file')
     records = []
     if pathlib.Path(path).suffix == '.gz':
-        with gzip.open(path, 'r') as f:
+        with gzip.open(path, 'rt') as f:
             for l in f:
                 records.append(json.loads(l))
-    else:
+    elif pathlib.Path(path).suffix == '.json':
         with open(path, 'r') as f:
             for l in f:
                 records.append(json.loads(l))
+    else:
+        raise ValueError(f'Unknown file type: {path}')
     
     logging.info('Converting to DataFrame')
     df = pd.DataFrame(records)

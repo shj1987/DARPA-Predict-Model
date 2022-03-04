@@ -15,9 +15,11 @@ def extractAcledTimeseries(path, granularity, start_date, end_date, out_path):
     if pathlib.Path(path).suffix == '.gz':
         with gzip.open(path, 'rt') as f:
             acled = pd.read_csv(StringIO(f.read()))
-    else:
+    elif pathlib.Path(path).suffix == '.csv':
         with open(path, 'r') as f:
             acled = pd.read_csv(StringIO(f.read()))
+    else:
+        raise ValueError(f'Unknown file type: {path}')
     
     logging.info('Counting')
     acled.event_date = pd.to_datetime(acled.event_date)

@@ -4,13 +4,14 @@ import pathlib
 import json
 from collections import defaultdict
 import logging
+import pickle as pkl
 
 import numpy as np
 import pandas as pd
 import gzip
 from tqdm import tqdm
 
-def extractTimeseries(paths, nodepath, start_date, end_date, out_path, stat_out_path):
+def extractTimeseries(paths, nodepath, platform, start_date, end_date, out_path, stat_out_path):
     logging.info(f'Reading node file')
     with open(nodepath, 'r') as f:
         twt_nodes = f.read().strip().split('\n')
@@ -24,25 +25,33 @@ def extractTimeseries(paths, nodepath, start_date, end_date, out_path, stat_out_
     t_userset = defaultdict(set)
     for datapath in paths:
         logging.info(f'Reading {datapath}')
-        with open(datapath, 'rb') as f:
-            for line in f:
-                tmp = json.loads(line)
-                if pd.to_datetime(tmp['nodeTime']).tz_localize(None) < pd.to_datetime(start_date).tz_localize(None):
-                    continue
-                if pd.to_datetime(tmp['nodeTime']).tz_localize(None) >= pd.to_datetime(end_date).tz_localize(None):
-                    continue
-                date = pd.to_datetime(tmp['nodeTime']).date()
-                tt = pd.to_datetime(tmp['nodeTime']).time()
-                user = tmp['nodeUserID']
-                infoId = tmp['informationID']
+        if pathlib.Path(datapath).suffix == '.gz':
+            f = gzip.open(datapath, 'rt')
+        elif pathlib.Path(datapath).suffix == '.json':
+            f = open(datapath, 'r')
+        else:
+            raise ValueError(f'Unknown file type: {datapath}')
+        for line in f:
+            tmp = json.loads(line)
+            if tmp['platform'] != platform:
+                continue
+            if pd.to_datetime(tmp['nodeTime']).tz_localize(None) < pd.to_datetime(start_date).tz_localize(None):
+                continue
+            if pd.to_datetime(tmp['nodeTime']).tz_localize(None) >= pd.to_datetime(end_date).tz_localize(None):
+                continue
+            date = pd.to_datetime(tmp['nodeTime']).date()
+            tt = pd.to_datetime(tmp['nodeTime']).time()
+            user = tmp['nodeUserID']
+            infoId = tmp['informationID']
 
-                tdict_count[infoId][date] += 1
-                tdict_userset[infoId][date].add(user)
-                tdict_timedist[infoId][date][tt.hour] += 1
-                tdict_lambda[infoId][tt.hour][date].append(tt.hour * 3600 + tt.minute * 60 + tt.second)
-                if user not in t_userset[infoId]:
-                    tdict_activateduserset[infoId][date].add(user)
-                t_userset[infoId].add(user)
+            tdict_count[infoId][date] += 1
+            tdict_userset[infoId][date].add(user)
+            tdict_timedist[infoId][date][tt.hour] += 1
+            tdict_lambda[infoId][tt.hour][date].append(tt.hour * 3600 + tt.minute * 60 + tt.second)
+            if user not in t_userset[infoId]:
+                tdict_activateduserset[infoId][date].add(user)
+            t_userset[infoId].add(user)
+        f.close()
     
     for k in set(twt_nodes) - set(tdict_count.keys()):
         logging.info(f'"{k}" does not exist in the dataset, ignoring')
@@ -83,8 +92,10 @@ def extractTimeseries(paths, nodepath, start_date, end_date, out_path, stat_out_
 
     logging.info('Writing timeseries')
     tmerge_df_json = {k: v.to_json() for k, v in tmerge_df.items()}
-    with open(out_path, 'w') as f:
+    out_path = pathlib.Path(out_path)
+    with open(out_path.parent.joinpath(f'{out_path.stem}.json'), 'w') as f:
         f.write(json.dumps(tmerge_df_json))
+    pd.to_pickle({k: v.EventCount for k, v in tmerge_df.items()}, out_path.parent.joinpath(f'{out_path.stem}.pkl'))
 
     logging.info('Counting distributions')
     tdist = defaultdict(lambda: [[], [], [], []])
@@ -140,16 +151,17 @@ def extractTimeseries(paths, nodepath, start_date, end_date, out_path, stat_out_
         json.dump({'span': len(idx), 'max': maxes, 'prob': tprob, 'dist': tdist, 'lambda': tlambda}, f)
 
 def main(args):
-    extractTimeseries(args.paths, args.nodes, args.startdate, args.enddate, args.out, args.statout)
+    extractTimeseries(args.paths, args.nodes, args.platform, args.startdate, args.enddate, args.out, args.statout)
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser(description='Extract timeseries and statistics from extracted groundtruth data.')
-    parser.add_argument('-i', '--paths', required=True, type=str, nargs='+', help='Path to the extracted groundtruth file (.json)')
+    parser.add_argument('-i', '--paths', required=True, type=str, nargs='+', help='Path to the extracted groundtruth file(s) (.json|.gz)')
     parser.add_argument('-n', '--nodes', required=True, type=str, help='Path to the node file (.txt)')
+    parser.add_argument('-p', '--platform', required=True, type=str, help='Which platform to extract (twitter|youtube|reddit|jamii)')
     parser.add_argument('-s', '--startdate', required=True, type=dateutil.parser.isoparse, help='The Start Date (format YYYY-MM-DD)')
     parser.add_argument('-e', '--enddate', required=True, type=dateutil.parser.isoparse, help='The End Date (format YYYY-MM-DD (Exclusive))')
     parser.add_argument('-o', '--out', required=True, type=str, help='Path to save the extract timeseries (.json)')
-    parser.add_argument('-p', '--statout', required=True, type=str, help='Path to save the extract statistics (.json)')
+    parser.add_argument('--statout', required=True, type=str, help='Path to save the extract statistics (.json)')
     args = parser.parse_args()
     for arg in vars(args):
         print(f'{arg} = {getattr(args, arg)}')
