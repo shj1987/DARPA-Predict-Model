@@ -14,7 +14,9 @@ import argparse
 
 
 def main(args):
-    nodelist = args.nodelist
+    nodelist_file = args.nodelist_file
+    with open(nodelist_file, 'r') as f:
+        nodelist = list(f.readlines())
     # targets = ["twitter_event","twitter_user","twitter_newuser"]
     t = ''.join(args.date.split('_'))
     targets = [f"{args.platform}_event", f"{args.platform}_user", f"{args.platform}_newuser"]

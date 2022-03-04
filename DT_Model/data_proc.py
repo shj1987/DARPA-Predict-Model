@@ -9,17 +9,6 @@ import os
 from collections import OrderedDict
 import argparse
 
-infoIDs_twitter = ["arrests", "arrests/opposition", "guaido/legitimate", "international/aid",
-                   "international/aid_rejected",
-                   "international/respect_sovereignty", "maduro/cuba_support", "maduro/dictator", "maduro/legitimate",
-                   "maduro/narco", "military", "military/desertions", "other/anti_socialism", "other/censorship_outage",
-                   "other/chavez", "other/chavez/anti", "protests", "violence"]
-dict_infoID_twitter = dict()
-ind = 0
-for infoID in infoIDs_twitter:
-    dict_infoID_twitter[infoID] = ind
-    ind += 1
-
 
 def json_to_csv(data_file, date, platform, time_series):
     '''
@@ -236,6 +225,7 @@ def generate_training_data(platform, section, corr, nodelist, training_length, p
             f_test.write(',' + str(y) + '\n')  # '0
         f_test.close()
 
+
 # start date: 2020-03-10, end_date: 2020-08-10
 def generating_new_data(platform, section, nodelist, training_length, prediction_length,
                         start_date, end_date, corr_file, ent_file):
@@ -282,13 +272,15 @@ def generating_new_data(platform, section, nodelist, training_length, prediction
 
 if __name__ == '__main__':
     args = argparse.ArgumentParser(description="Parameters for training DT model")
-    args.add_argument('-n', '--nodelist_file', default=None, type=str, help='Topic nodes list file path (default: None)')
+    args.add_argument('-n', '--nodelist_file', default=None, type=str,
+                      help='Topic nodes list file path (default: None)')
     args.add_argument('-d', '--date', default=None, type=str, help="Prediction date")
     args.add_argument('-df', '--data_file', default=None, type=str, help="The folder of all data files")
     args.add_argument('-p', '--platform', default="twitter", type=str, help="The platform of the data")
     args.add_argument('-corr', '--corr_file', default=None, type=str, help="The name of correlation file")
     args.add_argument('-gdelt', '--gdelt_file', default=None, type=str, help="The name of gdelt data file")
-    args.add_argument('-ent', '--entropy_file', default=None, type=str, help="The name of the processed entropy data file")
+    args.add_argument('-ent', '--entropy_file', default=None, type=str,
+                      help="The name of the processed entropy data file")
     args.add_argument('-ts', '--time_series', default=None, type=str, help="The name of time series file")
     args.add_argument('-sd', '--start_date', default=None, type=str, help="The starting state of training")
     args.add_argument('-pl', '--prediction_length', default=None, type=int, help="The length of prediction")
@@ -312,4 +304,3 @@ if __name__ == '__main__':
         corr[plf] = {}
         for s in sec:
             generate_training_data(plf, s, corr, nodelist, training_length, prediction_length)
-
