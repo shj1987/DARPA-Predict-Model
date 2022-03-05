@@ -1,0 +1,8 @@
+{
+  "max_num_subwords": 10,
+  "num_BERT_layers": 3,
+  "kernel_size": 2,
+  "in_channels": 36,
+  "out_channels": 16,
+  "model_dir": "./ucphrase/train_output/kpTimes/model"
+}
