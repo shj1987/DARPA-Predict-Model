@@ -164,8 +164,6 @@ def fill(predictions, nodes, pnodes, probs, gts, train_start_date, train_end_dat
         with open(p, 'r') as f:
             d = json.loads(f.read())
         pred = {k: pd.read_json(v, orient='columns').reindex(idx, fill_value=0) for k, v in d.items()}
-        print(pred)
-        exit(0)
 
         df = networkFilling(history_data, nodes, preserve_user_nodes, pred, prob, idx)
         check(pred, df, nodes, idx)
