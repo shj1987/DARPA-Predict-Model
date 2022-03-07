@@ -50,7 +50,7 @@ def train(narratives, main_data, leidos):
     return narrative_coef
 
 def main(argv):
-    parser = argparse.ArgumentParser(description='LR PLUS model.')
+    parser = argparse.ArgumentParser(description='LR PLUS TC model.')
     parser.add_argument('-m', '--main_file', required=True, type=str)
     parser.add_argument('-g', '--tc_file', required=True, type=str)
     parser.add_argument('--nodes', required=True, type=str, help='Path to the node file (.txt)')
