@@ -2,10 +2,10 @@ import utils
 import consts
 from tqdm import tqdm
 from typing import List
+import sys
 
-
-def merge(classifier_configs: List[consts.ClassifierConfig]):
-    docs = utils.JsonLine.load(consts.config.path_phrased_news_json)
+def merge(classifier_configs: List[consts.ClassifierConfig], path_phrased_news_json):
+    docs = utils.JsonLine.load(path_phrased_news_json)
     for doc in tqdm(docs, ncols=100, desc='merging'):
         for result in classifier_configs:
             url = doc['url']
@@ -26,4 +26,9 @@ def merge(classifier_configs: List[consts.ClassifierConfig]):
 
 
 if __name__ == '__main__':
-    utils.JsonLine.dump(merge(consts.config.classifier_configs), consts.config.path_merged)
+    config = consts.Config(
+        name='v1_append',
+        path_raw_news_json=sys.argv[1],
+        path_phrased_news_json=sys.argv[1],
+    )
+    utils.JsonLine.dump(merge(config.classifier_configs, config.path_phrased_news_json), config.path_merged)

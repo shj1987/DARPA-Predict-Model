@@ -3,13 +3,14 @@
 
 # Collect all the news text
 input_files = []
-
 import os
 import sys
-for root, dirs, files in os.walk(sys.argv[1], topdown=False):
-    for name in files:
-        if name.startswith(sys.argv[2]):
-            input_files.append(sys.argv[1] + name)
+for file in os.listdir(sys.argv[1]):
+    #print(files)
+    if os.path.isfile(os.path.join(sys.argv[1], file)):
+        if file.startswith(sys.argv[2]):
+            print(file)
+            input_files.append(sys.argv[1] + file)
     
 print(input_files)
 
@@ -48,7 +49,7 @@ if True:
 
 # Clean up previous runs
 #get_ipython().system('rm -rf WeSTClass/results/*')
-get_ipython().system('rm -f WeSTClass/news_manual/embedding')
+os.system('rm -f WeSTClass/news_manual/embedding')
 os.system('rm -f WeSTClass/news_manual/out.txt')
 
 
@@ -60,14 +61,11 @@ os.system('cd WeSTClass && python main.py --dataset news_manual --sup_source key
 
 # In[6]:
 
-url2west = dict()
+url2west = []
 with open('WeSTClass/news_manual/classes.txt') as IN:
     for line in IN:
         selected_nar.append(line.strip().split(':')[1])
-#selected_nar = ['covid', 'assistance', 'debt', 'environmentalism', 'infrastructure', 'mistreatment', 'prejudice', 'travel', 'un'] 
-topic2keywords_manual = {i : j for i, j in zip(A, B)}
-nar2key = {i:i for i in narratives}
-nar2keyweight = set()
+
 import numpy as np
 cnt = 0
 valid_url = []
@@ -83,37 +81,16 @@ close_all()
 
 # Collect results
 fin1 = open_all()
-with open('WeSTClass11/news_manual/out.txt') as fin2:
+with open('WeSTClass/news_manual/out.txt') as fin2, open('./data/ft_retrieval_westclass_append.json', 'w') as OUT:
     for u, line2 in zip(valid_url, fin2):
         raw = {i : j for i, j in zip(selected_nar, list(map(float, line2.strip().split(','))))}
-        west = dict()
-        for nar in selected_nar:
-            if nar in nar2keyweight:
-                score = 1.0
-                w = 0
-                for key in nar2keyweight[nar]:
-                    _s = raw[key]
-                    score *= np.power(_s, nar2keyweight[nar][key])
-                    w += nar2keyweight[nar][key]
-                score = np.power(score, 1.0 / w)
-            else:
-                nk = topic2keywords_manual[nar] if nar in topic2keywords_manual else nar2key[nar]
-                score = 1.0
-                weight = [0.0 for i in range(len(nk))]
-                weight[-1] += 0.8
-                for i in range(len(nk) - 1):
-                    weight[i] += 0.2 / (len(nk) - 1)
-                for key, w in zip(nk, weight):
-                    _s = raw[key]
-                    score *= np.power(_s, w)
-                score = np.power(score, 1.0 / sum(weight))
-            west[nar] = score
-        url2west[u] = west
+        #url2west.append({'url': u, 'prob':raw})
+        OUT.write(json.dumps({'url': u, 'prob':raw})+'\n')
         cnt += 1
     close_all()
 print(cnt)
 
-json.dump(url2west, open('./data/ft_retrieval_westclass_append.json', 'w'))
+#json.dump(url2west, open('./data/ft_retrieval_westclass_append.json', 'w'))
 # Only top 300 most confident results are kept for a frame
 if False:
     chosen_url = set()

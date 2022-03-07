@@ -28,3 +28,12 @@ python url2west_append.py $INPUT_DIR $INPUT_PREFIX
 # Run Retrieval & Fine-tuned Roberta
 ./classification_retrieval.sh
 
+# Merge Results of three methods
+# Output under v1_append/, change this in consts.py
+python merge.py $UCPHRASE_OUTPUT_PATH
+
+
+#Generate timeseries data
+#GDELT DATA is too large to be uploaded
+GDELT_DATA='./data/GDELT/cp6.ea.gdelt.events.v1.json'
+python gen_ts.py $GDELT_DATA
