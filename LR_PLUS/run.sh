@@ -1,3 +1,18 @@
 #!/bin/bash
-python lr_plus.py -m cp6_twitter_timeseries_to_11_29.json -g cp6_gdelt_timeseries.json -p twitter -t 15 -n 14 -c cp6_twitter_gdelt_corr_to_11_29.json -o twitter_prediction.json
-python lr_plus.py -m cp6_youtube_timeseries_to_11_29.json -g cp6_gdelt_timeseries.json -p youtube -t 15 -n 14 -c cp6_youtube_gdelt_corr_to_11_29.json -o youtube_prediction.json
+DATA_ROOT="/data/socialsim_data"
+
+python lr_plus.py \
+    -m "$DATA_ROOT/workdir/cp6_twitter_timeseries.json" \
+    -g "$DATA_ROOT/workdir/cp6_gdelt_timeseries.json" \
+    --nodes "$DATA_ROOT/cp6_twitter_nodelist.txt" \
+    -t 15 -n 21 \
+    -c "$DATA_ROOT/workdir/cp6_twitter_gdelt_corr.json" \
+    -o "$DATA_ROOT/workdir/cp6_lr_plus_twitter_prediction.json"
+
+python lr_plus.py \
+    -m "$DATA_ROOT/workdir/cp6_youtube_timeseries.json" \
+    -g "$DATA_ROOT/workdir/cp6_gdelt_timeseries.json" \
+    --nodes "$DATA_ROOT/cp6_youtube_nodelist.txt" \
+    -t 15 -n 21 \
+    -c "$DATA_ROOT/workdir/cp6_youtube_gdelt_corr.json" \
+    -o "$DATA_ROOT/workdir/cp6_lr_plus_youtube_prediction.json"

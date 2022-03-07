@@ -1,6 +1,8 @@
 #!/usr/bin/env python
 # coding: utf-8
-
+import argparse
+import dateutil.parser
+import pathlib
 import sys
 from math import ceil
 import json
@@ -16,13 +18,16 @@ from tqdm import tqdm
 from joblib import Parallel, delayed
 from load import load_data
 
+pd.options.mode.chained_assignment = None
+
 columns = ['nodeID', 'nodeUserID', 'parentID', 'rootID', 'actionType', 'nodeTime', 'platform', 'rootUserID', 'parentUserID', 'informationID']
 
 def networkFilling(history, nodes, preserve_user_nodes, pred, prob, idx):
 #     for infoID in nodeList:
     def inner(infoID):
-        content = data[infoID][['EventCount', 'UserCount', 'NewUserCount']].astype(int)
+        content = pred[infoID][['EventCount', 'UserCount', 'NewUserCount']].astype(int)
         totalEvent = sum(content.EventCount)
+        print(infoID, 'totalEvent', totalEvent)
         if totalEvent == 0:
             return pd.DataFrame(columns=columns)
         
@@ -122,7 +127,7 @@ def networkFilling(history, nodes, preserve_user_nodes, pred, prob, idx):
     return final
 
 
-def check(data, df, nodes):
+def check(data, df, nodes, idx):
     for infoID in nodes:
         if data[infoID].EventCount.sum() == 0:
             print('Pass', infoID)
@@ -130,20 +135,20 @@ def check(data, df, nodes):
         print(np.all(data[infoID].EventCount == df[df.informationID == infoID].nodeTime.value_counts().resample('D').sum().reindex(idx, fill_value=0)), infoID)
 
 
-def fill(predictions, nodes, pnodes, probs, gts, start_date, end_date, team_name, model_name, sim_period, out_path):
-    idx = pd.date_range(pd.to_datetime(start_date), pd.to_datetime(end_date) - pd.Timedelta(days=1))
+def fill(predictions, nodes, pnodes, probs, gts, train_start_date, train_end_date, pred_start_date, pred_end_date, team_name, model_name, sim_period, out_path):
+    idx = pd.date_range(pd.to_datetime(pred_start_date), pd.to_datetime(pred_end_date) - pd.Timedelta(days=1))
     results = []
     for p, n, pn, pb, gt in zip(predictions, nodes, pnodes, probs, gts):
         logging.info(f'Working on {p}')
         logging.info(f'Reading history')
-        history = pd.concat([
+        history_data = pd.concat([
             load_data(fn, ignore_first_line=False, verbose=False)[columns] \
             for fn in gt.split(';')
         ], ignore_index=True).sort_values(['nodeTime', 'nodeID']).reset_index(drop=True)
         history_data = history_data[~history_data.nodeUserID.isnull()]
         history_data.loc[history_data.parentUserID.isnull(), 'parentUserID'] = '?'
         history_data.loc[history_data.rootUserID.isnull(), 'rootUserID'] = '?'
-        history_data = history_data[(history_data.nodeTime >= pd.to_datetime(start_date)) & (history_data.nodeTime < pd.to_datetime(end_date))]
+        history_data = history_data[(history_data.nodeTime >= pd.to_datetime(train_start_date)) & (history_data.nodeTime < pd.to_datetime(train_end_date))]
         
         logging.info(f'Reading node file')
         with open(n, 'r') as f:
@@ -152,7 +157,7 @@ def fill(predictions, nodes, pnodes, probs, gts, start_date, end_date, team_name
             preserve_user_nodes = set(f.read().strip().split('\n'))
             
         logging.info(f'Reading statistics file')
-        with open(prob_path, 'r') as f:
+        with open(pb, 'r') as f:
             prob = json.load(f)
             
         logging.info(f'Reading prediction file')
@@ -160,10 +165,11 @@ def fill(predictions, nodes, pnodes, probs, gts, start_date, end_date, team_name
             d = json.loads(f.read())
         pred = {k: pd.read_json(v, orient='columns').reindex(idx, fill_value=0) for k, v in d.items()}
 
-        df = networkFilling(history, nodes, preserve_user_nodes, pred, prob, idx)
-        check(pred, df, nodes)
+        df = networkFilling(history_data, nodes, preserve_user_nodes, pred, prob, idx)
+        check(pred, df, nodes, idx)
         results.append(df)
     final = pd.concat(results, axis=0).sort_values(by='nodeTime').reset_index(drop=True)
+    final.nodeTime = final.nodeTime.apply(lambda x: x.strftime('%Y-%m-%dT%H:%M:%SZ'))
     
     identifier = {"team": team_name, "model_identifier": model_name, "simulation_period": sim_period}
     with open(out_path, 'w') as f:
@@ -177,20 +183,23 @@ def main(args):
     assert len(args.predictions) == len(args.groundtruths)
     assert len(args.predictions) == len(args.probs)
     fill(args.predictions, args.nodes, args.preserve_user_nodes, args.probs, args.groundtruths, \
-        args.startdate, args.enddate, args.team_name, args.model_name, args.simulation_period, args.out)
+        args.train_startdate, args.train_enddate, args.pred_startdate, args.pred_enddate, \
+        args.team_name, args.model_name, args.simulation_period, args.out)
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser(description='Network fill the messages from number prediction using old data.')
     parser.add_argument('-i', '--predictions', required=True, type=str, nargs='+', help='List of paths to prediction files (.json)')
     parser.add_argument('-n', '--nodes', required=True, type=str, nargs='+', help='List of paths to the node files (.txt)')
-    parser.add_argument('--preserve_user_nodes', required=True, type=str, nargs='+', help='List of paths to the node files that contains frames that need to preserve user names (.txt)')
+    parser.add_argument('-pn', '--preserve_user_nodes', required=True, type=str, nargs='+', help='List of paths to the node files that contains frames that need to preserve user names (.txt)')
     parser.add_argument('-p', '--probs', required=True, type=str, nargs='+', help='List of paths to statistics files (.json)')
     parser.add_argument('-g', '--groundtruths', required=True, type=str, nargs='+', help='List groundtruth files (.json), separate files of the same platform by ;')
-    parser.add_argument('-m', '--team_name', required=True, type=str, help='Team name')
+    parser.add_argument('-t', '--team_name', required=True, type=str, help='Team name')
     parser.add_argument('-m', '--model_name', required=True, type=str, help='Model name')
-    parser.add_argument('--simulation_period', required=True, type=str, help='Simulation period string')
-    parser.add_argument('-s', '--startdate', required=True, type=dateutil.parser.isoparse, help='The Start Date (format YYYY-MM-DD)')
-    parser.add_argument('-e', '--enddate', required=True, type=dateutil.parser.isoparse, help='The End Date (format YYYY-MM-DD (Exclusive))')
+    parser.add_argument('-sp', '--simulation_period', required=True, type=str, help='Simulation period string')
+    parser.add_argument('-ts', '--train_startdate', required=True, type=dateutil.parser.isoparse, help='The Training Start Date (format YYYY-MM-DD)')
+    parser.add_argument('-te', '--train_enddate', required=True, type=dateutil.parser.isoparse, help='The Training End Date (format YYYY-MM-DD (Exclusive))')
+    parser.add_argument('-ps', '--pred_startdate', required=True, type=dateutil.parser.isoparse, help='The Prediction Start Date (format YYYY-MM-DD)')
+    parser.add_argument('-pe', '--pred_enddate', required=True, type=dateutil.parser.isoparse, help='The Prediction End Date (format YYYY-MM-DD (Exclusive))')
     parser.add_argument('-o', '--out', required=True, type=str, help='Path to save the filled output (.json)')
     args = parser.parse_args()
     for arg in vars(args):

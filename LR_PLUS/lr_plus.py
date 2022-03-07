@@ -1,5 +1,6 @@
 import os
 import json
+import argparse
 from sklearn import linear_model
 import numpy as np
 import pandas as pd
@@ -83,7 +84,7 @@ def get_cross_corr(narratives, events, corrmat_file):
     :param corrmat_file: which correlation matrix we will use
     :return: List of correlation lists for each narrative
     """
-    with open(os.path.join(os.getcwd(), corrmat_file), 'r') as f:
+    with open(corrmat_file, 'r') as f:
         d = json.loads(f.read())
 
     # dict of list to store correlations for each narrative
@@ -236,74 +237,62 @@ def autoRegressive(main_file, top_num, train_num, p, p1, narratives, corrmat_fil
 def main(argv):
     # prediction
     prevs = [0]  # prev dates
-    gdelt_file = None
-    platform = None
-    after_shift_gdelt = 1  # shift window to match the time lag between different data
-    top_num = None  # top 15 gdelt
-    test_num = None
-    corrmat_file = None
-    main_file = None
-    output_file = None
+    after_shift_gdelt = 0  # shift window to match the time lag between different data
 
-    opts, args = getopt.getopt(argv, 'hm:g:p:t:n:c:o:')
-    for opt, arg in opts:
-        if opt == '-h':
-            print('lr_plus.py -m <mainfile> -g <gdeltfile> -p <platform> -t <events top num> -n <test dates> -c <corrmatfile> -o <outputfile>')
-            sys.exit()
-        elif opt == '-m':
-            main_file = arg
-        elif opt == '-g':
-            gdelt_file = arg
-        elif opt == '-p':
-            platform = arg
-        elif opt == '-t':
-            top_num = int(arg)
-        elif opt == '-n':
-            test_num = int(arg)
-        elif opt == '-c':
-            corrmat_file = arg
-        elif opt == '-o':
-            output_file = arg
+    parser = argparse.ArgumentParser(description='LR PLUS model.')
+    parser.add_argument('-m', '--main_file', required=True, type=str)
+    parser.add_argument('-g', '--gdelt_file', required=True, type=str)
+    parser.add_argument('--nodes', required=True, type=str, help='Path to the node file (.txt)')
+    # parser.add_argument('-p', '--platform', required=True, type=str)
+    parser.add_argument('-t', '--num_top_evt', required=True, type=int)
+    parser.add_argument('-n', '--num_days_test', required=True, type=int)
+    parser.add_argument('-c', '--corrmat_file', required=True, type=str)
+    parser.add_argument('-o', '--output_file', required=True, type=str)
+    args = parser.parse_args()
+    for arg in vars(args):
+        print(f'{arg} = {getattr(args, arg)}')
 
     # get main data and training narrative names
-    main_data = read_main_data(main_file)
-    narratives = list(main_data.keys())
+    main_data = read_main_data(args.main_file)
+    # narratives = list(main_data.keys())
+    with open(args.nodes, 'r') as f:
+        narratives = f.read().strip().split('\n')
 
     # number of training dates for main platform
     train_num = len(main_data[narratives[0]])
 
     # get gdelt data for prediction
-    gdelt_id = get_highest_gdelt(top_num, gdelt_file)
-    gdelt_data = get_cross_data(gdelt_id, after_shift_gdelt, gdelt_file)
+    gdelt_id = get_highest_gdelt(args.num_top_evt, args.gdelt_file)
+    gdelt_data = get_cross_data(gdelt_id, after_shift_gdelt, args.gdelt_file)
 
     # dict to store gdelt data
-    with open(os.path.join(os.getcwd(), gdelt_file), 'r') as f:
+    with open(os.path.join(args.gdelt_file), 'r') as f:
         d = json.loads(f.read())
     gdelt_dict = {k: pd.read_json(v, typ='series') for k, v in d.items()}
 
     # prediction date
     idx = gdelt_dict[list(gdelt_dict.keys())[
-        0]][train_num: train_num + test_num].index    # dates for prediction
+        0]][train_num: train_num + args.num_days_test].index    # dates for prediction
 
     # column tag
     columns_name = main_data[narratives[0]].columns.values
 
     for p in prevs:
         rst_dict = {}  # result dict indexed by narrative name
-        train_rst = autoRegressive(main_file, top_num, train_num, p,
-                                   1, narratives, corrmat_file, after_shift_gdelt, gdelt_file)
+        train_rst = autoRegressive(args.main_file, args.num_top_evt, train_num, p,
+                                   1, narratives, args.corrmat_file, after_shift_gdelt, args.gdelt_file)
         coef = train_rst[0]  # coefficients
         scale = train_rst[1]
-        if len(coef[0]) != (p + 1)*top_num + 1:
+        if len(coef[0]) != (p + 1) * args.num_top_evt + 1:
             print("error")
         # gdelt correlation for training narratives
-        cross_corr = get_cross_corr(narratives, gdelt_id, corrmat_file)
+        cross_corr = get_cross_corr(narratives, gdelt_id, args.corrmat_file)
 
         # predict for current training narrative
         for i, na in enumerate(narratives):
             re = []
             current_scale = scale[na]
-            for d in range(test_num):  # dth day of prediction
+            for d in range(args.num_days_test):  # dth day of prediction
                 gdelt_data_predict_d = []
                 for j in range(len(gdelt_data)):
                     # jth gdelt data for prediction on dth day
@@ -334,7 +323,7 @@ def main(argv):
             rst_dict[na] = pd.DataFrame(
                 re, columns=columns_name, index=idx).to_json()
 
-    with open(output_file, 'w') as out:
+    with open(args.output_file, 'w') as out:
         json.dump(rst_dict, out)
         print('Done!')
 
