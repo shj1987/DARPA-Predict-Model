@@ -36,4 +36,7 @@ python merge.py $UCPHRASE_OUTPUT_PATH
 #Generate timeseries data
 #GDELT DATA is too large to be uploaded
 GDELT_DATA='./data/GDELT/cp6.ea.gdelt.events.v1.json'
-python gen_ts.py $GDELT_DATA
+START_DATE='2020-02-01'
+END_DATE='2020-11-29'
+GDELT_SERIES='data/timeseries/cp6_gdelt_timeseries.json'
+python gen_ts.py $GDELT_DATA $START_DATE $END_DATE $GDELT_SERIES

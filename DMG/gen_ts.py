@@ -8,7 +8,11 @@ import calendar
 
 count = 0
 series = {}
-frame_name = ['covid', 'covid/assistance', 'debt', 'environmentalism', 'infrastructure', 'mistreatment', 'prejudice', 'travel', 'un']
+frame_name = []
+with open('WeSTClass/news_manual/classes.txt') as IN:
+    for line in IN:
+        frame_name.append(line.strip().split(':')[1])
+
 # Dump all the time series
 def dump_series(news_event, fn):
     news_time = dict()
@@ -22,8 +26,8 @@ def dump_series(news_event, fn):
     json.dump({i:json.dumps(news_time[i]) for i in news_time}, open(fn, 'w'))
 
     
-series_start_date = "2020-02-01"
-series_end_date = '2020-11-29'
+series_start_date = sys.argv[2]
+series_end_date = sys.argv[3]
 
 all_dates = [i.strftime("%Y-%m-%d") for i in pd.date_range(start=series_start_date,end=series_end_date).to_pydatetime().tolist()]
 
@@ -71,7 +75,7 @@ with open(sys.argv[1]) as IN:
             url2event[tmp['sourceurl']].append(tmp['EventCode'])
 print(count)
 
-IN=open('data/timeseries/cp6_gdelt_timeseries.json','r')
+IN=open(sys.argv[4],'r')
 tmp = json.load(IN)
 
 eventCodeMap = {}
@@ -84,7 +88,6 @@ import calendar
 from datetime import datetime
 # Calculate the correlation matrix between gdelt event code and news frame
 corr_mat = dict()
-cor_end_date2="2021-01-31"
 for target_method in [
             'Leidos',
             #'hybrid3',
@@ -94,7 +97,7 @@ for target_method in [
             #'retrieval',
             'Leidos+retrieval_ft2'
             ]: # , 'lotclass', 'tuned_bert'
-    selected_dates = [i.strftime("%Y-%m-%d") for i in pd.date_range(start="2020-02-01",end=cor_end_date2).to_pydatetime().tolist()]
+    selected_dates = [i.strftime("%Y-%m-%d") for i in pd.date_range(start=series_start_date,end=series_end_date).to_pydatetime().tolist()]
     selected_stamp = dict()
     date2stamp = dict()
     for d in selected_dates:
@@ -130,5 +133,5 @@ for target_method in [
         for n1 in frame_name:
             twitterGdeltMat_norm[n1][n2] = eventcode_nar_score[n2][n1] / eventcode_doc[n2] if eventcode_doc[n2] > 0 else 0.0
             twitterGdeltMat_raw[n1][n2] = eventcode_nar_score[n2][n1]
-    json.dump(twitterGdeltMat_norm, open(f'./v1_append/news_gdelt_{target_method}_corr_to_{cor_end_date2}.json', 'w'))
+    json.dump(twitterGdeltMat_norm, open(f'./v1_append/news_gdelt_{target_method}_corr_to_{series_end_date}.json', 'w'))
     corr_mat[target_method] = twitterGdeltMat_norm
