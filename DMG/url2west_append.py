@@ -81,6 +81,7 @@ close_all()
 
 # Collect results
 fin1 = open_all()
+os.system('mkdir -p ./data')
 with open('WeSTClass/news_manual/out.txt') as fin2, open('./data/ft_retrieval_westclass_append.json', 'w') as OUT:
     for u, line2 in zip(valid_url, fin2):
         raw = {i : j for i, j in zip(selected_nar, list(map(float, line2.strip().split(','))))}

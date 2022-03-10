@@ -2,21 +2,20 @@ import os, csv
 import copy
 import numpy as np
 import pandas as pd
-import matplotlib.pyplot as plt
 
-from DT_Model.models.linear_regr import linear_regr
+from models.linear_regr import linear_regr
 from src.utils import load_csv_data
 from src.ModelTree import ModelTree
 import json
 from sklearn.metrics import mean_squared_error as mse
-from random import randrange, uniform
+from random import randrange
 import argparse
 
 
 def main(args):
     nodelist_file = args.nodelist_file
     with open(nodelist_file, 'r') as f:
-        nodelist = list(f.readlines())
+        nodelist = f.read().strip().split('\n')
     # targets = ["twitter_event","twitter_user","twitter_newuser"]
     t = ''.join(args.date.split('_'))
     targets = [f"{args.platform}_event", f"{args.platform}_user", f"{args.platform}_newuser"]
@@ -43,7 +42,9 @@ def main(args):
             X, y, header = load_csv_data(data_csv_data_filename, mode="regr", verbose=False)
 
             top10, top5, avg = plot_model_tree_fit(linear_regr(), X, y, name, target, error, t, args.data_file)
-            sdate = args.start_date  # 3-22 1552608000000 #3-15 1552003200000 # 3-8 1551398400000 #3-1 #1550188800000# 2-14 #1549584000000
+            # sdate = args.start_date  # 3-22 1552608000000 #3-15 1552003200000 # 3-8 1551398400000 #3-1 #1550188800000# 2-14 #1549584000000
+            sdate = int(pd.to_datetime(args.start_date).timestamp() * 1000)
+
             if target == f"{args.platform}_event":
                 tt10[key]["EventCount"] = {}
                 tt5[key]["EventCount"] = {}
@@ -70,53 +71,12 @@ def main(args):
                     tt5[key]["NewUserCount"][str(sdate + i * 86400000)] = int(top5[i])
                     tt[key]["NewUserCount"][str(sdate + i * 86400000)] = int(avg[i])
 
-            # if target == "youtube_user":
-            #     yt10[key]["UserCount"] = {}
-            #     yt5[key]["UserCount"] = {}
-            #     yt[key]["UserCount"] = {}
-            #     for i in range(len(avg)):
-            #         yt10[key]["UserCount"][str(sdate + i * 86400000)] = int(top10[i])
-            #         yt5[key]["UserCount"][str(sdate + i * 86400000)] = int(top5[i])
-            #         yt[key]["UserCount"][str(sdate + i * 86400000)] = int(avg[i])
-            #
-            # if target == "youtube_newuser":
-            #     yt10[key]["NewUserCount"] = {}
-            #     yt5[key]["NewUserCount"] = {}
-            #     yt[key]["NewUserCount"] = {}
-            #     for i in range(len(avg)):
-            #         yt10[key]["NewUserCount"][str(sdate + i * 86400000)] = int(top10[i])
-            #         yt5[key]["NewUserCount"][str(sdate + i * 86400000)] = int(top5[i])
-            #         yt[key]["NewUserCount"][str(sdate + i * 86400000)] = int(avg[i])
-            #
-            # if target == "youtube_event":
-            #     yt10[key]["EventCount"] = {}
-            #     yt5[key]["EventCount"] = {}
-            #     yt[key]["EventCount"] = {}
-            #     for i in range(len(avg)):
-            #         yt[key]["EventCount"][str(sdate + i * 86400000)] = int(avg[i])
-            #         yt10[key]["EventCount"][str(sdate + i * 86400000)] = int(top10[i])
-            #         yt5[key]["EventCount"][str(sdate + i * 86400000)] = int(top5[i])
         tt[key] = pd.DataFrame(tt[key]).to_json()
         yt[key] = pd.DataFrame(yt[key]).to_json()
         tt5[key] = pd.DataFrame(tt5[key]).to_json()
         yt5[key] = pd.DataFrame(yt5[key]).to_json()
         tt10[key] = pd.DataFrame(tt10[key]).to_json()
         yt10[key] = pd.DataFrame(yt10[key]).to_json()
-    # error = error/108
-    # print("rmse:",  error[0])
-    # print("ape:", error[1])
-    # with open(f'./CP4_test/youtube_UIUC_ML_LASSO_LEIDOS_314.json', 'w') as outfile:
-    #     json.dump(yt10, outfile)
-    # with open('./CP4_test/twitter_UIUC_ML_LASSO_LEIDOS_314.json', 'w') as outfile:
-    #     json.dump(tt10, outfile)
-    # with open('youtube_UIUC_lasso_top5_dryrun_314.json', 'w') as outfile:
-    #     json.dump(yt5, outfile)
-    # with open('twitter_UIUC_lasso_top5_dryrun_314.json', 'w') as outfile:
-    #     json.dump(tt5, outfile)
-    # # with open('youtube_UIUC_lasso_avg_dryrun.json', 'w') as outfile:
-    # #     json.dump(yt, outfile)
-    # # with open('twitter_UIUC_lasso_avg_dryrun.json', 'w') as outfile:
-    #     json.dump(tt, outfile)
     with open(f'./{args.data_file}/{args.platform}_UIUC_ML_LASSO_LEIDOS_{t}_top10.json', 'w') as outfile:
         json.dump(tt10, outfile)
     with open(f'./{args.data_file}/{args.platform}_UIUC_ML_LASSO_LEIDOS_{t}_top5.json', 'w') as outfile:
@@ -217,6 +177,6 @@ if __name__ == "__main__":
     args.add_argument('-df', '--data_file', default=None, type=str, help="The file path of the data")
     args.add_argument('-d', '--date', default=None, type=str, help="The date of this evaluation")
     args.add_argument('-p', '--platform', default='twitter', type=str, help="The name of platform, [twitter, youtube, etc.]")
-    args.add_argument('-sd', '--start_date', default=None, type=int, help="The starting time stamp")
+    args.add_argument('-sd', '--start_date', default=None, type=str, help="The starting time stamp")
     args = args.parse_args()
     main(args)

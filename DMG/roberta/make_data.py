@@ -24,6 +24,8 @@ with gzip.open(args.i_path,'rt') as fin, open(args.o_path, 'w') as fout:
         js = json.loads(line)
         if js['url'] in urls:
             continue
+        if 'title' not in js or 'text' not in js or js['title'] is None or js['text'] is None:
+            continue
         urls.add(js['url'])
         try:
             if 'text' in js and js['text']:

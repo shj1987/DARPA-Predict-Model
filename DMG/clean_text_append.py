@@ -50,6 +50,8 @@ if True:
     with gzip.open(path_i_file, 'rt') as fin:
         for line in tqdm(fin):
             obj = json.loads(line)
+            if 'title' not in obj or 'text' not in obj or obj['title'] is None or obj['text'] is None:
+                continue
             nid = len(news)
             news.append(obj)
             url2news[news[-1]['url']] = len(news) - 1
@@ -134,11 +136,6 @@ else:
 
 
 # In[18]:
-
-#narratives = ['benefits/connections/afghanistan', 'benefits/covid', 'benefits/development/energy', 'benefits/development/maritime', 'benefits/development/roads', 'benefits/jobs', 'controversies/china/border', 'controversies/china/debt', 'controversies/china/exploitation', 'controversies/china/funding', 'controversies/china/naval', 'controversies/china/uighur', 'controversies/pakistan/army', 'controversies/pakistan/bajwa', 'controversies/pakistan/baloch', 'controversies/pakistan/students', 'leadership/bajwa', 'leadership/khan', 'leadership/sharif', 'opposition/kashmir', 'opposition/propaganda']
-#cp-6 narratives
-narratives = ['covid', 'covid/assistance', 'debt', 'environmentalism', 'infrastructure', 'mistreatment', 'prejudice', 'trade', 'travel', 'un'] 
-# Try to make the text clean (for english text only)
 
 import nltk
 import string

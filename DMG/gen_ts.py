@@ -5,6 +5,7 @@ import pandas as pd
 import numpy as np
 from datetime import datetime as dt
 import calendar
+import gzip
 
 count = 0
 series = {}
@@ -35,12 +36,12 @@ all_dates = [i.strftime("%Y-%m-%d") for i in pd.date_range(start=series_start_da
 
 for target_method in [
             'Leidos',
-            #'hybrid3',
+            # 'hybrid3',
             'Westclass',
-            #'Westclass_top1000',
+            # 'Westclass_top1000',
             # 'Leidos+retrieval_ft1',
-            #'retrieval',
-            'Leidos+retrieval_ft2'
+            # 'retrieval',
+            # 'Leidos+retrieval_ft2'
             ]:
     series[target_method] = {frame: defaultdict(float) for frame in frame_name}
 url2result = set()
@@ -52,7 +53,7 @@ with open('v1_append/merged_hybrid.jsonl') as fin:
         if  y >= dt.strptime(series_start_date, "%Y-%m-%d") and y<= dt.strptime(series_end_date, "%Y-%m-%d"):
         #print(line1)
         #break
-            for target_method in ['Leidos','Westclass','Leidos+retrieval_ft2']:
+            for target_method in ['Leidos', 'Westclass']:#,'Leidos+retrieval_ft2']:
                 if f'{target_method}_prob' in js:
                     #js['west_prob'][frame_name[idx]] = p
                     for idx, f in enumerate(frame_name):
@@ -68,7 +69,8 @@ for k in series:
     dump_series(series[k], f'v1_append/{k}_time_series_to_{series_end_date}.json')
         
 url2event = defaultdict(list)
-with open(sys.argv[1]) as IN:
+# with open(sys.argv[1]) as IN:
+with gzip.open(sys.argv[1], 'rt') as IN:
     for line in IN:
         tmp = json.loads(line)
         if tmp['sourceurl'] in url2result:
@@ -90,12 +92,12 @@ from datetime import datetime
 corr_mat = dict()
 for target_method in [
             'Leidos',
-            #'hybrid3',
+            # 'hybrid3',
             'Westclass',
-            #'Westclass_top1000',
+            # 'Westclass_top1000',
             # 'Leidos+retrieval_ft1',
-            #'retrieval',
-            'Leidos+retrieval_ft2'
+            # 'retrieval',
+            # 'Leidos+retrieval_ft2'
             ]: # , 'lotclass', 'tuned_bert'
     selected_dates = [i.strftime("%Y-%m-%d") for i in pd.date_range(start=series_start_date,end=series_end_date).to_pydatetime().tolist()]
     selected_stamp = dict()

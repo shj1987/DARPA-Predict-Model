@@ -1,3 +1,17 @@
-python data_proc.py -n nodelist.txt -d 3-14 -df CP6_2021 -p twitter -corr news_gdelt_leidos_bert_corr_to_314.json -gdelt gdelt_time_series.json -ent zipf_time_series_to_8_10.json -ts twitter_time_series_to_3_14.json -pl 28 -tl 81
-python run_original.py -n nodelist.txt -d 3-14 -df CP6_2021 -p twitter -sd 1552003200000
-python run_lasso.py -n nodelist.txt -d 3-14 -df CP6_2021 -p twitter -sd 1552003200000
+DATA_ROOT="/data/socialsim_data"
+DT_ROOT="2021CP6"
+
+mkdir -p "${DT_ROOT}_csv"
+
+python data_proc.py \
+    -n "$DATA_ROOT/cp6_twitter_nodelist.txt" \
+    -d "1-31" \
+    -df "2021CP6" \
+    -p "twitter" \
+    -corr "$DATA_ROOT/workdir/cp6_twitter_gdelt_corr.json" \
+    -gdelt "$DATA_ROOT/workdir/cp6_gdelt_timeseries.json" \
+    -ts "$DATA_ROOT/workdir/cp6_twitter_timeseries.json" \
+    -pl 21 -tl 345
+
+python run_original.py -n "$DATA_ROOT/cp6_twitter_nodelist.txt" -d "1-31" -df "2021CP6" -p "twitter" -sd "2021-01-11"
+python run_lasso.py -n "$DATA_ROOT/cp6_twitter_nodelist.txt" -d "1-31" -df "2021CP6" -p "twitter" -sd "2021-01-11"

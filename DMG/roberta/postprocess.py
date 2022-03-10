@@ -2,7 +2,7 @@ import json
 import gzip
 import string
 import argparse
-
+from pathlib import Path
 
 urls = set()
 id2urls = dict()
@@ -13,7 +13,7 @@ parser.add_argument('--path_raw_gz', type=str, required=True)
 parser.add_argument('--path_id2url', type=str, required=True)
 parser.add_argument('--path_roberta_output', type=str, required=True)
 parser.add_argument('--path_roberta_url2prob', type=str, required=True)
-parser.add_argument('--path_frame_names', type=str, default='./roberta/frame/tmp/classes.txt')
+parser.add_argument('--path_frame_names', type=str, default=Path(__file__).parent.joinpath('frame','tmp', 'classes.txt'))
 args = parser.parse_args()
 
 # path_raw_gz = '../../data/0830appended/eval3_cp6.ea.newsarticles.youtube.2020-12-21_2021-01-10.json.gz'
@@ -32,6 +32,8 @@ with gzip.open(path_raw_gz,'rt') as fin, open(path_id2url, 'w') as fout:
         js = json.loads(line)
         if js['url'] in urls:
             continue
+        if 'title' not in js or 'text' not in js or js['title'] is None or js['text'] is None:
+            continue
         urls.add(js['url'])
         try:
             if 'text' in js and js['text']:
@@ -40,8 +42,6 @@ with gzip.open(path_raw_gz,'rt') as fin, open(path_id2url, 'w') as fout:
             pass
     json.dump(id2urls, fout, indent=4)
     
-    
-# narratives = 'covid,assistance,debt,environmentalism,infrastructure,mistreatment,prejudice,trade,travel,un'.split(',')
 with open(args.path_frame_names) as rf:
     narratives = rf.readline().strip().split(',')
 url_done = dict()

@@ -5,6 +5,7 @@ import argparse
 from tqdm import tqdm
 from whoosh.index import create_in
 
+from pathlib import Path
 
 parser = argparse.ArgumentParser()
 parser.add_argument("--ix_name", type=str, required=True)
@@ -12,6 +13,8 @@ parser.add_argument("--ix_dir", type=str, required=True)
 parser.add_argument("--dir_retrieved_docs", type=str, required=True)
 parser.add_argument("--path_input_cleaned_corpus", type=str, required=True)
 parser.add_argument("--path_twitter_timeseries_pickle", type=str, required=True)
+parser.add_argument("--start_date", type=str, required=True)
+parser.add_argument("--end_date", type=str, required=True)
 args = parser.parse_args()
 
 
@@ -52,6 +55,7 @@ path_input_file = args.path_input_cleaned_corpus
 
 # assert False, 'index finished, no need to run again'
 
+os.system('rm -rf ' + ix_dirname)
 if not os.path.isdir(ix_dirname):
     print('indexing')
     os.mkdir(ix_dirname)
@@ -97,23 +101,23 @@ def getdt(date_string):
 twitter_df = pd.read_pickle(args.path_twitter_timeseries_pickle)
 
 
-MIN_DATE = getdt('2020-02-01')
-MAX_DATE = getdt('2021-01-31')
+MIN_DATE = getdt(args.start_date)
+MAX_DATE = getdt(args.end_date)
 
 frame2keywords = {
     'covid': 'covid OR covid19 OR coronavirus OR corona',
-    'prejudice': 'prejudice OR discrimination OR xenophobia OR racist OR racism',
-    'mistreatment': 'mistreatment',
-    'travel': 'travel OR flights OR travelers OR traveler',
-    'un': '"united nations" OR "un secretary" OR un',
-    'infrastructure': 'china africa OR tanzania OR kenya OR Zimbabwe SGR',  # can improve
-    'environmentalism': 'china OR chinese Zimbabwe OR Nigeria "mining" OR "mine"',
     'debt': 'china OR chinese tanzania loan OR loans',
-    'covid/assistance': 'china africa covid donate OR dontation OR help OR assistance',
-#     'trade': 'china africa OR kenya trade OR imports OR exports',
+    'environmentalism': 'china OR chinese Zimbabwe OR Nigeria "mining" OR "mine"',
+    'infrastructure': 'china africa OR tanzania OR kenya OR Zimbabwe SGR',  # can improve
+    'mistreatment': 'mistreatment',
+    'prejudice': 'prejudice OR discrimination OR xenophobia OR racist OR racism',
+    'travel': 'travel OR flights OR travelers OR traveler',
+    'un': '"united nations" OR "un secretary" OR un'
+    # 'covid/assistance': 'china africa covid donate OR dontation OR help OR assistance',
+    # 'trade': 'china africa OR kenya trade OR imports OR exports',
 }
 # frame2keywords = {
-# #     'debt': 'china OR chinese tanzania loan OR loans',
+#     'debt': 'china OR chinese tanzania loan OR loans',
 #     'infrastructure': 'china africa OR tanzania OR kenya OR Zimbabwe SGR',  # can improve
 # }
 
@@ -149,10 +153,11 @@ def draw(frame):
     df.index = dti
     sns.lineplot(data=normed(df), label="retrieval")
     
-    if frame == 'assistance':
-        if "covid/assistance" in twitter_df:
-            sns.lineplot(data=normed(twitter_df["covid/assistance"]), label='twitter')
-    elif frame in twitter_df:
+    # if frame == 'assistance':
+    #     if "covid/assistance" in twitter_df:
+    #         sns.lineplot(data=normed(twitter_df["covid/assistance"]), label='twitter')
+    # elif frame in twitter_df:
+    if frame in twitter_df:
         sns.lineplot(data=normed(twitter_df[frame]), label='twitter')
     
     plt.xticks(rotation=70)
@@ -167,5 +172,5 @@ for url, frame2prob in url2frame2prob.items():
     for frame in frame2keywords.keys():
         if frame not in frame2prob:
             url2frame2prob[url][frame] = 0
-with open(f'./retrieval/retrieved_url2frame2prob_{ix_name}.json', 'w') as wf:
+with open(Path(__file__).parent.joinpath('..', f'retrieved_url2frame2prob_{ix_name}.json'), 'w') as wf:
     json.dump(url2frame2prob, wf, indent=4)

@@ -7,3 +7,5 @@ gensim
 sklearn
 keras
 spherecluster
+fasttext
+spacy

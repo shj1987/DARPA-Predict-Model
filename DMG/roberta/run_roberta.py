@@ -11,6 +11,8 @@ from tqdm import tqdm
 from transformers.tokenization_xlm_roberta import XLMRobertaTokenizer
 from torch.utils.data import TensorDataset, DataLoader, SequentialSampler
 
+from pathlib import Path
+
 import pickle
 import ipdb
 import torch
@@ -20,12 +22,12 @@ import modellib
 
 parser = argparse.ArgumentParser(description='Apply SocialSim BERT Models')
 parser.add_argument('--gpu', type=int, default=None, help='which gpu to use')
-parser.add_argument('--model', type=str, default='./cea_frame_model/pytorch_model.bin', help='Path to model .bin file')
-parser.add_argument('--tokenizer', type=str, default='./cea_frame_model/sentencepiece.bpe.model', help='Path to model .bin file')
+parser.add_argument('--model', type=str, default=Path(__file__).parent.joinpath('..', 'cea_frame_model', 'pytorch_model.bin'), help='Path to model .bin file')
+parser.add_argument('--tokenizer', type=str, default=Path(__file__).parent.joinpath('..', 'cea_frame_model', 'sentencepiece.bpe.model'), help='Path to model .bin file')
 parser.add_argument('--type', type=str, choices=['frame', 'stance'], default='frame', help='Either the string "frame" for frame or "stance" for stance')
-parser.add_argument('--input', type=str, default='./data/eval3_cp6.ea.newsarticles.youtube.2020-12-21_2021-01-10.csv', help='Input csv file with "comment" and "id" columns')
-parser.add_argument('--dir', type=str, default='./roberta/frame', help='Directory containing /tmp/classes.txt for either stance or frame')
-parser.add_argument('--output', type=str, default='./roberta/frame/ft_retrieval_roberta.csv', help='Output csv file path')
+parser.add_argument('--input', type=str, required=True, help='Input csv file with "comment" and "id" columns')
+parser.add_argument('--dir', type=str, required=True, help='Directory containing /tmp/classes.txt for either stance or frame')
+parser.add_argument('--output', type=str, required=True, help='Output csv file path')
 
 CARGS = parser.parse_args()
 
@@ -82,7 +84,8 @@ def predict(model, args, dir_data, device, test_filename='test.csv'):
         nb_eval_examples += input_ids.size(0)
         nb_eval_steps += 1
 
-    return pd.merge(pd.DataFrame(input_data), pd.DataFrame(all_logits, columns=label_list), left_index=True,
+    # We are picking out the selected frames. The models are given, so we can only pick by selecting.
+    return pd.merge(pd.DataFrame(input_data), pd.DataFrame(all_logits[:, [0,2,3,4,5,6,8,9]], columns=label_list), left_index=True,
                     right_index=True)
 
 

@@ -8,15 +8,16 @@ from tqdm import tqdm
 from torch.optim import Adam
 from transformers.tokenization_xlm_roberta import XLMRobertaTokenizer
 from torch.utils.data import TensorDataset, DataLoader, RandomSampler
-
+from pathlib import Path
 
 def parse_args():
     parser = argparse.ArgumentParser(description='Apply SocialSim BERT Models')
     parser.add_argument('--gpu', type=int, default=None)
     parser.add_argument('--batch_size', type=int, default=64)
-    parser.add_argument('--dir_data', type=str, default='./retrieval/retrieved_docs/')
-    parser.add_argument('--model', type=str, default='./cea_frame_model/pytorch_model.bin')
-    parser.add_argument('--tokenizer', type=str, default='./cea_frame_model/sentencepiece.bpe.model')
+    parser.add_argument('--articles', type=str, required=True)
+    parser.add_argument('--dir_data', type=str, default=Path(__file__).parent.joinpath('..', 'retrieved_docs'))
+    parser.add_argument('--model', type=str, default=Path(__file__).parent.joinpath('..', '..', 'cea_frame_model', 'pytorch_model.bin'))
+    parser.add_argument('--tokenizer', type=str, default=Path(__file__).parent.joinpath('..', '..', 'cea_frame_model', 'sentencepiece.bpe.model'))
     return parser.parse_args()
 
 
@@ -39,7 +40,7 @@ class Trainer:
         print('OK!')
 
         print('loading training data', end='...')
-        corpus = datalib.Corpus(self.args.dir_data)
+        corpus = datalib.Corpus(self.args.dir_data, self.args.articles)
         pos_train_docs = list(corpus.url2doc.values())
         neg_train_docs = corpus.sample_negative_docs()
         train_docs = pos_train_docs + neg_train_docs

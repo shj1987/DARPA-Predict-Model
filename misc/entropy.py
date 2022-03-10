@@ -1,4 +1,8 @@
 from collections import OrderedDict, defaultdict, deque, Counter
+import argparse
+import dateutil.parser
+import pathlib
+import logging
 import gzip
 import json
 from math import sqrt
@@ -11,6 +15,10 @@ from scipy.optimize import curve_fit
 import nltk
 from nltk.tokenize import word_tokenize
 from nltk.corpus import stopwords
+
+nltk.download('puncts')
+nltk.download('stopwords')
+nltk.download('words')
 
 def calcEntropy(path, nodepath, start_date, end_date, out_path):
     logging.info(f'Reading node file')
@@ -77,12 +85,12 @@ def calcEntropy(path, nodepath, start_date, end_date, out_path):
     etps2_df = {}
     for k, v in etps2.items():
         tmpmean = np.mean(list(v.values()))
-        tmp = pd.Series(v).reindex(idx, fill_value=tmpmean)
+        tmp = pd.Series(v, dtype=float).reindex(idx, fill_value=tmpmean)
         tmp[tmp < 1e-3] = tmpmean
         etps2_df[k] =tmp
 
     for k in set(twt_nodes) - set(etps2_df.keys()):
-        etps2_df[k] = pd.Series().reindex(idx, fill_value=1)
+        etps2_df[k] = pd.Series(dtype=float).reindex(idx, fill_value=1)
 
     logging.info(f'Writing to file')
     etps2_df_json = {k: v.to_json() for k, v in etps2_df.items()}

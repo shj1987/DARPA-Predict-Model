@@ -2,19 +2,18 @@ import os, csv
 import copy
 import numpy as np
 import pandas as pd
-import matplotlib.pyplot as plt
 from src.utils import load_csv_data
 from src.ModelTree import ModelTree
 import json
 from sklearn.metrics import mean_squared_error as mse
-from random import randrange, uniform
+from random import randrange
 import argparse
 
 
 def main(args):
     nodelist_file = args.nodelist_file
     with open(nodelist_file, 'r') as f:
-        nodelist = list(f.readlines())
+        nodelist = f.read().strip().split('\n')
     # targets = ["twitter_event","twitter_user","twitter_newuser"]
     t = ''.join(args.date.split('_'))
     targets = [f"{args.platform}_event", f"{args.platform}_user", f"{args.platform}_newuser"]
@@ -46,7 +45,8 @@ def main(args):
             # from models.linear_regr import linear_regr
             # top10, top5, avg = plot_model_tree_fit(linear_regr(), X, y, name, target, error)
             top10, top5, avg = plot_model_tree_fit(lasso(), X, y, name, target, error, t, args.data_file)
-            sdate = args.start_date  # 3-22 1552608000000 #3-15 1552003200000 # 3-8 1551398400000 #3-1 #1550188800000# 2-14 #1549584000000
+            # sdate = args.start_date  # 3-22 1552608000000 #3-15 1552003200000 # 3-8 1551398400000 #3-1 #1550188800000# 2-14 #1549584000000
+            sdate = int(pd.to_datetime(args.start_date).timestamp() * 1000)
             if target == f"{args.platform}_event":
                 tt10[key]["EventCount"] = {}
                 tt5[key]["EventCount"] = {}
@@ -220,6 +220,6 @@ if __name__ == "__main__":
     args.add_argument('-df', '--data_file', default=None, type=str, help="The file path of the data")
     args.add_argument('-d', '--date', default=None, type=str, help="The date of this evaluation")
     args.add_argument('-p', '--platform', default='twitter', type=str, help="The name of platform, [twitter, youtube, etc.]")
-    args.add_argument('-sd', '--start_date', default=None, type=int, help="The starting time stamp")
+    args.add_argument('-sd', '--start_date', default=None, type=str, help="The starting time stamp")
     args = args.parse_args()
     main(args)

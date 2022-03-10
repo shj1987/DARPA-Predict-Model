@@ -32,16 +32,16 @@ class Config:
         self.classifier_configs = [
             ClassifierConfig(
                 cls_name='Leidos',
-                path_url2frame2prob='./roberta/frame/prob_append_eval3_cp6.ea.newsarticles.youtube.2020-12-21_2021-01-10.json',
+                path_url2frame2prob='./roberta/frame/prob_append_eval4_cp6.ea.newsarticles.twitter.2021-01-11_2021-01-31.json',
                 hard_threshold=0.0,
                 soft_threshold=0.0
             ),
-            ClassifierConfig(
-                cls_name='Leidos+retrieval_ft2',
-                path_url2frame2prob='./roberta/frame/prob_append_ft2_eval3_cp6.ea.newsarticles.youtube.2020-12-21_2021-01-10.json',
-                hard_threshold=0.0,
-                soft_threshold=0.0
-            ),
+            # ClassifierConfig(
+            #     cls_name='Leidos+retrieval_ft2',
+            #     path_url2frame2prob='./roberta/frame/prob_append_ft2_eval4_cp6.ea.newsarticles.twitter.2021-01-11_2021-01-31.json',
+            #     hard_threshold=0.0,
+            #     soft_threshold=0.0
+            # ),
             ClassifierConfig(
                 cls_name='Westclass',
                 path_url2frame2prob='./data/ft_retrieval_westclass_append.json',

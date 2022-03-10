@@ -62,15 +62,15 @@ def main(argv):
     for arg in vars(args):
         print(f'{arg} = {getattr(args, arg)}')
 
-    with open(os.path.join(os.getcwd(), args.tc_file), 'r') as f:
+    with open(args.tc_file, 'r') as f:
         leidos_ts = json.loads(f.read())
     leidos = {k: pd.read_json(v, typ='series') for k, v in leidos_ts.items()}
 
-    with open(os.path.join(os.getcwd(), args.zipf_file), 'r') as f:
+    with open(args.zipf_file, 'r') as f:
         zipf_ts = json.load(f)
     zipf = OrderedDict(sorted({k: pd.read_json(v, typ='series') for k, v in zipf_ts.items()}.items(), key=lambda kv: kv[1].sum(), reverse=True))
 
-    with open(os.path.join(os.getcwd(), args.main_file), 'r') as f:
+    with open(args.main_file, 'r') as f:
         d = json.loads(f.read())
     main_data = {k: pd.read_json(v, orient='columns') for k, v in d.items()}
 
