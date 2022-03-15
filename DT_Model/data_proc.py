@@ -237,8 +237,8 @@ if __name__ == '__main__':
     prediction_length = args.prediction_length
     with open(nodelist_file, 'r') as f:
         nodelist = f.read().strip().split('\n')
-    # gdelt_to_csv(data_file, args.gdelt_file)
-    # corr_to_csv(data_file, date, args.corr_file, args.platform)
+    gdelt_to_csv(data_file, args.gdelt_file)
+    corr_to_csv(data_file, date, args.corr_file, args.platform)
     corr = {}
     platforms = [args.platform]
     # platforms = ['twitter']

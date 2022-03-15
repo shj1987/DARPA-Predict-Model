@@ -3,17 +3,17 @@ GPU=0
 DATA_ROOT="/data/socialsim_data"
 
 # Step-1 Clean the input file
-INPUT="$DATA_ROOT/Challenge/eval-4/news_articles/cp6.ea.newsarticles.twitter.2021-01-11_2021-01-31.json.gz"
+INPUT="$DATA_ROOT/Exogenous/NewsArticles/cp6.ea.newsarticles.training.v1.json.gz"
 INPUT_GDELT="$DATA_ROOT/Exogenous/GDELT/cp6.ea.gdelt.events.v1.json.gz"
-CLEAN_OUTPUT="$DATA_ROOT/workdir/cleaned_eval4_cp6.ea.newsarticles.twitter.2021-01-11_2021-01-31.json"
+CLEAN_OUTPUT="$DATA_ROOT/workdir/cleaned_cp6.ea.newsarticles.training.json"
 
 python clean_text_append.py $INPUT $CLEAN_OUTPUT $INPUT_GDELT
 
 # Step-1 Phrase mining
-UCPHRASE_INPUT='./ucphrase/testdata/ucphrase_input_cleaned_eval4_cp6.ea.newsarticles.twitter.2021-01-11_2021-01-31.json'
-UCPHRASE_DECODE_DIR='./ucphrase/decoded/cleaned_eval4_cp6.ea.newsarticles.twitter.2021-01-11_2021-01-31'
-UCPHRASE_DECODE_PATH='./ucphrase/decoded/cleaned_eval4_cp6.ea.newsarticles.twitter.2021-01-11_2021-01-31/decoded/doc2sents-0.85-tokenized.id.ucphrase_input_cleaned_eval4_cp6.ea.newsarticles.twitter.2021-01-11_2021-01-31.json'
-UCPHRASE_OUTPUT_PATH='./ucphrase/ucphrase_cleaned_eval4_cp6.ea.newsarticles.twitter.2021-01-11_2021-01-31.json'
+UCPHRASE_INPUT='./ucphrase/testdata/ucphrase_input_cleaned_cp6.ea.newsarticles.training.json'
+UCPHRASE_DECODE_DIR='./ucphrase/decoded/cleaned_cp6.ea.newsarticles.training'
+UCPHRASE_DECODE_PATH='./ucphrase/decoded/cleaned_cp6.ea.newsarticles.training/decoded/doc2sents-0.85-tokenized.id.ucphrase_input_cleaned_cp6.ea.newsarticles.training.json'
+UCPHRASE_OUTPUT_PATH='./ucphrase/ucphrase_cleaned_cp6.ea.newsarticles.training.json'
 
 python ucphrase_prepare_input.py -i ${CLEAN_OUTPUT} -o ${UCPHRASE_INPUT}
 python ucphrase/src/predict.py --gpu ${GPU} --path_corpus ${UCPHRASE_INPUT} --dir_output ${UCPHRASE_DECODE_DIR}

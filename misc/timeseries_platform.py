@@ -70,9 +70,13 @@ def extractTimeseries(paths, nodepath, platform, start_date, end_date, out_path,
         for h in range(24):
             if len(list(filter(lambda x: len(x) > 1, tdict_lambda[node][h].values()))) == 0 and -1 not in tdict_lambda[node][h]:
                 tdict_lambda[node][h][-1].extend([0, tdict_lambda_whole[node]])
-    tlambda = {k: [np.concatenate(list(map(np.diff, map(sorted, filter(lambda x: len(x) > 1, v[h].values()))))).mean() \
-                   for h in range(24)] 
-               for k, v in tdict_lambda.items()}
+    tlambda = {}
+    for k, v in tdict_lambda.items():
+        tlambda[k] = [100] * 24
+        for h in range(24):
+            lst = list(map(np.diff, map(sorted, filter(lambda x: len(x) > 1, v[h].values()))))
+            if len(lst) > 0:
+                tlambda[k][h] = np.concatenate(lst).mean()
 
     logging.info('Counting events and users')
     tdict_usercount = {k: {kk: len(vv) for kk, vv in v.items()} for k, v in tdict_userset.items()}
