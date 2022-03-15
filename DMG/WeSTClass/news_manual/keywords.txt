@@ -1,0 +1,8 @@
+0:covid,coronavirus,covid19,pandemic,corona_virus,lockdowns
+1:debt,debts,chinese_loans,african_debt,repayments
+2:environment,environmental,pollution,national_park,preservation,wildlife
+3:infrastructure,road,roads,railways,ports,railway,public_infrastructure
+4:mistreatment,maltreatment,abuse,abusement,ill_treatment,detention,detainee
+5:prejudice,racial_prejudice,racism,racist,xenophobia,discrimination,religious_discrimination
+6:travel,flights,flight,international_travel,traveler,travelers,vacations
+7:un,united_nations,un_secretary,security_council

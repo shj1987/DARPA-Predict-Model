@@ -1,0 +1,11 @@
+whoosh
+seaborn
+transformers==3.4.0
+numpy
+nltk
+gensim
+sklearn
+keras
+spherecluster
+fasttext
+spacy

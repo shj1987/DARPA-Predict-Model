@@ -1,0 +1,8 @@
+0:covid
+1:debt
+2:environmentalism
+3:infrastructure
+4:mistreatment
+5:prejudice
+6:travel
+7:un

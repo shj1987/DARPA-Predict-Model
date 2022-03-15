@@ -1,0 +1,7 @@
+numpy
+nltk
+gensim==3.8.1
+sklearn==0.22.0
+keras==2.4.3
+spherecluster
+tensorflow==2.5.0

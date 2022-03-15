@@ -1,0 +1,14 @@
+numpy
+tensorflow==2.5.0
+keras==2.4.3
+sklearn==0.22.0
+nltk
+spacy
+transformers==3.4.0
+fasttext
+gensim==3.8.1
+spherecluster
+matplotlib
+seaborn
+tldextract
+whoosh
